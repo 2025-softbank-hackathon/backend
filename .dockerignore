@@ -1,0 +1,10 @@
+.git
+.github
+.gradle
+build
+bin
+*.md
+.gitignore
+.env
+.DS_Store
+node_modules

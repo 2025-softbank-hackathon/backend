@@ -14,9 +14,9 @@ phases:
       - IMAGE_TAG=$(TZ='Asia/Seoul' date '+%Y%m%d%H%M%S')
   build:
     commands:
-      - docker build -t ${IMAGE_NAME}:${COMMIT_SHA} .
-      - docker tag ${IMAGE_NAME}:${COMMIT_SHA} ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}
-      - docker tag ${IMAGE_NAME}:${COMMIT_SHA} ${ECR_URI}:latest
+      - docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+      - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}
+      - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:latest
   post_build:
     commands:
       - docker push ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}

@@ -1,0 +1,21 @@
+{
+  "family": "chatapp-dev-task-green",
+  "executionRoleArn": "arn:aws:iam::137068226866:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "containerDefinitions": [
+    {
+      "name": "chatapp-container",
+      "image": "137068226866.dkr.ecr.ap-northeast-2.amazonaws.com/softbank-api:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000
+        }
+      ]
+    }
+  ]
+}

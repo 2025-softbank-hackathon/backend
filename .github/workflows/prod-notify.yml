@@ -1,0 +1,46 @@
+name: prod-push-notify
+
+on:
+  push:
+    branches: [ "prod" ]
+
+jobs:
+  notify-and-maybe-trigger:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Extract info
+        id: info
+        run: |
+          echo "commit_msg<<EOF" >> $GITHUB_OUTPUT
+          echo "${{ github.event.head_commit.message }}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      # - name: Configure AWS (OIDC)
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-region: ap-northeast-2
+      #     role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/GHAOIDC-ProdDeploy
+
+      - name: Send Slack message
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          COMMIT="${{ steps.info.outputs.sha }}"
+          MSG="${{ steps.info.outputs.commit_msg }}"
+          PAYLOAD=$(jq -n --arg text "*prod* push: \`$COMMIT\`\n$MSG" \
+             '{text:$text}')
+          curl -X POST -H 'Content-type: application/json' \
+               --data "$PAYLOAD" "$SLACK_WEBHOOK_URL"
+
+      # - name: Auto trigger if keyword present
+      #   if: contains(steps.info.outputs.commit_msg, '[auto-deploy]')
+      #   run: |
+      #     aws lambda invoke \
+      #       --function-name softbank-prod-trigger \
+      #       --payload "$(jq -n --arg commit "${{ steps.info.outputs.sha }}" \
+      #                        '{source:"github", auto:true, commit:$commit}')" \
+      #       /dev/null

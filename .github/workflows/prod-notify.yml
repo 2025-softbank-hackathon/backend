@@ -19,11 +19,11 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
           echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
-      # - name: Configure AWS (OIDC)
-      #   uses: aws-actions/configure-aws-credentials@v4
-      #   with:
-      #     aws-region: ap-northeast-2
-      #     role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/GHAOIDC-ProdDeploy
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-northeast-2
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GHAOIDC-ProdDeploy
 
       - name: Send Slack message
         env:

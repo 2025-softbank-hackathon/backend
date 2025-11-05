@@ -8,12 +8,8 @@ env:
     ECR_URI: "/softbank/api/ecr-uri"
 
 phases:
-  test_spring:
-    commands:
-      - ./gradlew build -x test
   pre_build:
     commands:
-      - if [ -f "./gradlew" ]; then chmod +x ./gradlew; ./gradlew build -x test --no-daemon; fi
       - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$(echo $ECR_URI | cut -d'/' -f1)"
       - IMAGE_TAG=$(TZ='Asia/Seoul' date '+%Y%m%d%H%M%S')
   build:

@@ -1,0 +1,10 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+  build:
+    commands:
+      - if [ -f "./gradlew" ]; then chmod +x ./gradlew; ./gradlew build -x test --no-daemon; fi
+  post_build:
+    commands:

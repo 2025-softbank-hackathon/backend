@@ -10,56 +10,28 @@ env:
 phases:
   pre_build:
     commands:
-      - echo "=== [PRE_BUILD] Checking original files ==="
-      - ls -la | grep -E "(appspec|taskdef)"
-      - echo ""
-      - echo "=== [PRE_BUILD] Original appspec.yaml content ==="
-      - cat appspec.yaml
-      - echo ""
-      - echo "=== [PRE_BUILD] Original taskdef.json content ==="
-      - cat taskdef.json
-      - echo ""
+      - echo "Logging in to Amazon ECR..."
       - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$(echo $ECR_URI | cut -d'/' -f1)"
       - IMAGE_TAG=$(TZ='Asia/Seoul' date '+%Y%m%d%H%M%S')
+      - echo "Image tag will be ${IMAGE_TAG}"
       
   build:
     commands:
+      - echo "Building Docker image..."
       - docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
       - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}
       - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:latest
       
   post_build:
     commands:
+      - echo "Pushing Docker images to ECR..."
       - docker push ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}
       - docker push ${ECR_URI}:latest
-      
-      # taskdef.json 수정
-      - echo "=== [POST_BUILD] Updating taskdef.json ==="
-      - sed "s#REPLACE_IMAGE_URI#${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}#g" taskdef.json > taskdef_temp.json
-      - mv taskdef_temp.json taskdef.json
-      - echo ""
-      
-      # 최종 파일 검증
-      - echo "=== [POST_BUILD] FINAL appspec.yaml content ==="
-      - cat appspec.yaml
-      - echo ""
-      - echo "=== [POST_BUILD] FINAL appspec.yaml file type ==="
-      - file appspec.yaml
-      - echo ""
-      - echo "=== [POST_BUILD] FINAL appspec.yaml hex dump (first 100 bytes) ==="
-      - xxd -l 100 appspec.yaml
-      - echo ""
-      
-      - echo "=== [POST_BUILD] FINAL taskdef.json content ==="
-      - cat taskdef.json
-      - echo ""
-      
-      - echo "=== [POST_BUILD] Files to be uploaded ==="
-      - ls -lah appspec.yaml taskdef.json
-      - echo ""
+      - echo "Creating imagedefinitions.json..."
+      - printf '[{"name":"softbank-api","imageUri":"%s"}]' ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG} > imagedefinitions.json
+      - echo "Contents of imagedefinitions.json:"
+      - cat imagedefinitions.json
 
 artifacts:
   files:
-    - appspec.yaml
-    - taskdef.json
-  discard-paths: yes
+    - imagedefinitions.json

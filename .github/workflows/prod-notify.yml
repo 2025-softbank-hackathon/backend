@@ -50,6 +50,46 @@ jobs:
       #       /dev/null
 
 
+      - name: Send Slack interactive message
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}   # xoxb-***
+          SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID }}     # C0123ABCDEF
+        run: |
+          COMMIT="${{ steps.info.outputs.sha }}"
+          MSG="${{ steps.info.outputs.commit_msg }}"
+          REPO="${{ github.repository }}"
+          RUN_ID="${{ github.run_id }}"
+          RUN_NUMBER="${{ github.run_number }}"
+
+          # 버튼 value에 컨텍스트를 JSON으로 담기
+          VAL_PROD=$(jq -cn --arg repo "$REPO" --arg run_id "$RUN_ID" --arg sha "$COMMIT" --arg env "prod" --arg strategy "canary" \
+            '{repo:$repo,run_id:$run_id,sha:$sha,env:$env,strategy:$strategy}')
+
+          read -r -d '' BLOCKS << 'JSON'
+          [
+            { "type":"section",
+              "text":{"type":"mrkdwn","text":"*prod* push: `${COMMIT}`\n${MSG}\nRun #${RUN_NUMBER}"} },
+            { "type":"actions","block_id":"deploy_panel",
+              "elements":[
+                { "type":"button","action_id":"deploy_prod",
+                  "text":{"type":"plain_text","text":"🚀 Deploy PROD"},
+                  "style":"danger",
+                  "value":"__VAL_PROD__" }
+              ] }
+          ]
+          JSON
+
+          BLOCKS="${BLOCKS//\${COMMIT}/$COMMIT}"
+          BLOCKS="${BLOCKS//\${MSG}/$(printf '%s' "$MSG" | sed 's/"/\\"/g')}"
+          BLOCKS="${BLOCKS//\${RUN_NUMBER}/$RUN_NUMBER}"
+          BLOCKS="${BLOCKS/__VAL_PROD__/$VAL_PROD}"
+
+          curl -sS -X POST https://slack.com/api/chat.postMessage \
+            -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+            -H 'Content-type: application/json; charset=utf-8' \
+            --data "$(jq -n --arg channel "$SLACK_CHANNEL_ID" --argjson blocks "$BLOCKS" '{channel:$channel, blocks:$blocks, text:"prod deploy"}')"
+
+
       - name: Publish CI metrics to CloudWatch
         if: always()
         env:

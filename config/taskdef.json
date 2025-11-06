@@ -1,19 +1,34 @@
 {
-  "family": "chatapp-dev-task-green",
-  "executionRoleArn": "arn:aws:iam::137068226866:role/ecsTaskExecutionRole",
+  "family": "softbank-api-task",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
   "memory": "512",
+  "taskRoleArn": "arn:aws:iam::137068226866:role/softbank-api-task-role",
+  "executionRoleArn": "arn:aws:iam::137068226866:role/chatapp-dev-ecs-task-execution-role",
   "containerDefinitions": [
     {
-      "name": "chatapp-container",
+      "name": "softbank-api",
       "image": "<IMAGE1_NAME>",
       "essential": true,
       "portMappings": [
         {
           "containerPort": 3000,
-          "hostPort": 3000
+          "protocol": "tcp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/softbank-api-task",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "environment": [
+        {
+          "name": "SPRING_PROFILES_ACTIVE",
+          "value": "dev"
         }
       ]
     }

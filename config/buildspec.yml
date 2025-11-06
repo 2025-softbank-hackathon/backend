@@ -21,7 +21,7 @@ phases:
     commands:
       - docker push ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}
       - docker push ${ECR_URI}:latest
-      - printf '[{"name":"softbank-container","imageUri":"%s"}]' ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG} > imagedefinitions.json
+      - printf '[{"name":"softbank-api","imageUri":"%s"}]' ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG} > imagedefinitions.json
       - cat imagedefinitions.json
 
 artifacts:

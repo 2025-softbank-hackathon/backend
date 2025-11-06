@@ -3,7 +3,8 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: "taskdef.json"
+        TaskDefinition: <TASK_DEFINITION>
         LoadBalancerInfo:
-          ContainerName: chatapp-container
+          ContainerName: "softbank-api"
           ContainerPort: 3000
+        PlatformVersion: "LATEST"

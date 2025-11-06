@@ -39,5 +39,6 @@ phases:
       
 artifacts:
   files:
-    - revision.zip
+    - appspec.yml
+    - taskdef.json
   discard-paths: yes

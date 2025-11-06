@@ -5,5 +5,6 @@ Resources:
       Properties:
         TaskDefinition: "taskdef.json"
         LoadBalancerInfo:
-          ContainerName: chatapp-container
+          ContainerName: "softbank-api"
           ContainerPort: 3000
+        PlatformVersion: "LATEST"

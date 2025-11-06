@@ -21,20 +21,20 @@ phases:
     commands:
       - docker push ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}
       - docker push ${ECR_URI}:latest
-      - printf '[{"name":"softbank-api","imageUri":"%s"}]' ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG} > imagedefinitions.json
-      - cat imagedefinitions.json
+      # - printf '[{"name":"softbank-api","imageUri":"%s"}]' ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG} > imagedefinitions.json
+      # - cat imagedefinitions.json
 
       # taskdef.json에 이미지 URI 치환
-      # - sed "s#REPLACE_IMAGE_URI#${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}#g" taskdef.json > taskdef.json
-      # - cat taskdef.json
-
-# artifacts:
-#   files:
-#     - appspec.yml
-#     - taskdef.json
-#   discard-paths: yes
+      - sed "s#REPLACE_IMAGE_URI#${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}#g" taskdef.json > taskdef.json
+      - cat taskdef.json
 
 artifacts:
   files:
-    - imagedefinitions.json
+    - appspec.yml
+    - taskdef.json
   discard-paths: yes
+
+# artifacts:
+#   files:
+#     - imagedefinitions.json
+#   discard-paths: yes

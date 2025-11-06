@@ -10,33 +10,40 @@ env:
 phases:
   pre_build:
     commands:
-      - echo "Logging in to Amazon ECR..."
+      - echo "🔐 Logging in to Amazon ECR..."
       - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$(echo $ECR_URI | cut -d'/' -f1)"
       - IMAGE_TAG=$(TZ='Asia/Seoul' date '+%Y%m%d%H%M%S')
       - FULL_IMAGE="${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}"
-      - echo "Image will be ${FULL_IMAGE}"
+      - echo "📦 Image will be ${FULL_IMAGE}"
 
   build:
     commands:
-      - echo "Building Docker image..."
+      - echo "🚧 Building Docker image..."
       - docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
       - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${FULL_IMAGE}
       - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:latest
 
   post_build:
     commands:
-      - echo "Pushing Docker images to ECR..."
+      - echo "🚀 Pushing Docker images to ECR..."
       - docker push ${FULL_IMAGE}
       - docker push ${ECR_URI}:latest
-      - echo "Rendering taskdef.json with new image..."
+      - echo "🧩 Rendering taskdef.json with new image..."
       - |
         jq --arg IMG "${FULL_IMAGE}" '
           (.containerDefinitions[] | select(.name=="chatapp-container") | .image) = $IMG
         ' taskdef.json > taskdef.rendered.json
       - mv taskdef.rendered.json taskdef.json
       - cat taskdef.json | jq '.'
-      - zip -j revision.zip appspec.yml taskdef.json
-      
+
+      # appspec.yml과 taskdef.json이 실제로 존재하는지 확인
+      - echo "📂 Checking files before zipping..."
+      - ls -al
+
+      # zip 생성
+      - echo "🗜️ Creating revision.zip..."
+      - zip -j ./revision.zip ./appspec.yml ./taskdef.json
+
 artifacts:
   files:
     - revision.zip

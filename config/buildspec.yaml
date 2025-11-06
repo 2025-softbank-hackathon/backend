@@ -10,29 +10,53 @@ env:
 phases:
   pre_build:
     commands:
-      - echo "Checking files..."
-      - ls -la appspec.yaml taskdef.json
+      - echo "=== [PRE_BUILD] Checking original files ==="
+      - ls -la | grep -E "(appspec|taskdef)"
+      - echo ""
+      - echo "=== [PRE_BUILD] Original appspec.yaml content ==="
+      - cat appspec.yaml
+      - echo ""
+      - echo "=== [PRE_BUILD] Original taskdef.json content ==="
+      - cat taskdef.json
+      - echo ""
       - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$(echo $ECR_URI | cut -d'/' -f1)"
-      - export IMAGE_TAG=$(TZ='Asia/Seoul' date '+%Y%m%d%H%M%S')
+      - IMAGE_TAG=$(TZ='Asia/Seoul' date '+%Y%m%d%H%M%S')
+      
   build:
     commands:
       - docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
       - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}
       - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:latest
+      
   post_build:
     commands:
       - docker push ${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}
       - docker push ${ECR_URI}:latest
       
-      # taskdef.json에 이미지 URI 치환 (수정됨)
+      # taskdef.json 수정
+      - echo "=== [POST_BUILD] Updating taskdef.json ==="
       - sed "s#REPLACE_IMAGE_URI#${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}#g" taskdef.json > taskdef_temp.json
       - mv taskdef_temp.json taskdef.json
-      - echo "Updated taskdef.json:"
-      - cat taskdef.json
+      - echo ""
       
-      # 최종 파일 확인
-      - echo "Final artifact files:"
-      - ls -la appspec.yaml taskdef.json
+      # 최종 파일 검증
+      - echo "=== [POST_BUILD] FINAL appspec.yaml content ==="
+      - cat appspec.yaml
+      - echo ""
+      - echo "=== [POST_BUILD] FINAL appspec.yaml file type ==="
+      - file appspec.yaml
+      - echo ""
+      - echo "=== [POST_BUILD] FINAL appspec.yaml hex dump (first 100 bytes) ==="
+      - xxd -l 100 appspec.yaml
+      - echo ""
+      
+      - echo "=== [POST_BUILD] FINAL taskdef.json content ==="
+      - cat taskdef.json
+      - echo ""
+      
+      - echo "=== [POST_BUILD] Files to be uploaded ==="
+      - ls -lah appspec.yaml taskdef.json
+      - echo ""
 
 artifacts:
   files:

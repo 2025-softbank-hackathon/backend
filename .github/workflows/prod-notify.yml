@@ -11,6 +11,10 @@ jobs:
       id-token: write
       contents: read
     steps:
+      - name: Mark start
+        id: start
+        run: echo "ts=$(data +%s)" >> $GITHUB_OUTPUT
+
       - name: Extract info
         id: info
         run: |
@@ -19,11 +23,11 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
           echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
-      # - name: Configure AWS (OIDC)
-      #   uses: aws-actions/configure-aws-credentials@v4
-      #   with:
-      #     aws-region: ap-northeast-2
-      #     role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/GHAOIDC-ProdDeploy
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-northeast-2
+          role-to-assume: ${{ github.ref_name == 'prod' && secrets.AWS_ROLE_ARN_PROD || secrets.AWS_ROLE_ARN_DEV }}
 
       - name: Send Slack message
         env:
@@ -44,3 +48,29 @@ jobs:
       #       --payload "$(jq -n --arg commit "${{ steps.info.outputs.sha }}" \
       #                        '{source:"github", auto:true, commit:$commit}')" \
       #       /dev/null
+
+
+      # ★ (핵심) CloudWatch로 CI 메트릭 퍼블리시
+      - name: Publish CI metrics to CloudWatch
+        if: always()
+        run: |
+          DURATION=$(( $(date +%s) - ${{ steps.start.outputs.ts }} ))
+          STATUS_VAL=0
+          if [ "${{ job.status }}" = "success" ]; then STATUS_VAL=1; fi
+
+          NS="CI/GitHub"
+          DIM="repo=${{ github.repository }},branch=${{ github.ref_name }},workflow=${{ github.workflow }}"
+
+          aws cloudwatch put-metric-data \
+            --namespace "$NS" \
+            --metric-name BuildStatus \
+            --value "$STATUS_VAL" \
+            --unit Count \
+            --dimensions "$DIM"
+
+          aws cloudwatch put-metric-data \
+            --namespace "$NS" \
+            --metric-name BuildDurationSec \
+            --value "$DURATION" \
+            --unit Seconds \
+            --dimensions "$DIM"

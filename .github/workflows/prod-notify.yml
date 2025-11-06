@@ -53,41 +53,70 @@ jobs:
       - name: Send Slack interactive message
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}   # xoxb-***
-          SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID }}     # C0123ABCDEF
+          SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID }}     # C09NN0X1TF1
         run: |
+          set -euo pipefail
+
           COMMIT="${{ steps.info.outputs.sha }}"
           MSG="${{ steps.info.outputs.commit_msg }}"
           REPO="${{ github.repository }}"
           RUN_ID="${{ github.run_id }}"
           RUN_NUMBER="${{ github.run_number }}"
 
-          # 버튼 value에 컨텍스트를 JSON으로 담기
-          VAL_PROD=$(jq -cn --arg repo "$REPO" --arg run_id "$RUN_ID" --arg sha "$COMMIT" --arg env "prod" --arg strategy "canary" \
+          # 버튼 value에 컨텍스트(JSON) 담기
+          VAL_PROD=$(jq -cn \
+            --arg repo "$REPO" \
+            --arg run_id "$RUN_ID" \
+            --arg sha "$COMMIT" \
+            --arg env "prod" \
+            --arg strategy "canary" \
             '{repo:$repo,run_id:$run_id,sha:$sha,env:$env,strategy:$strategy}')
 
-          read -r -d '' BLOCKS << 'JSON'
-          [
-            { "type":"section",
-              "text":{"type":"mrkdwn","text":"*prod* push: `${COMMIT}`\n${MSG}\nRun #${RUN_NUMBER}"} },
-            { "type":"actions","block_id":"deploy_panel",
-              "elements":[
-                { "type":"button","action_id":"deploy_prod",
-                  "text":{"type":"plain_text","text":"🚀 Deploy PROD"},
-                  "style":"danger",
-                  "value":"__VAL_PROD__" }
-              ] }
-          ]
-          JSON
+          # blocks를 jq로 조립 (문자열 치환 X, 이스케이프 걱정 X)
+          BODY=$(jq -cn \
+            --arg channel "$SLACK_CHANNEL_ID" \
+            --arg commit "$COMMIT" \
+            --arg msg "$MSG" \
+            --arg runnum "$RUN_NUMBER" \
+            --arg val "$VAL_PROD" \
+            '{
+              channel: $channel,
+              text: "prod deploy",
+              blocks: [
+                {
+                  type: "section",
+                  text: { type: "mrkdwn",
+                    text: ("*prod* push: `\($commit)`\n\($msg)\nRun #\($runnum)")
+                  }
+                },
+                {
+                  type: "actions",
+                  block_id: "deploy_panel",
+                  elements: [
+                    {
+                      type: "button",
+                      action_id: "deploy_prod",
+                      text: { type: "plain_text", text: "🚀 Deploy PROD" },
+                      style: "danger",
+                      value: $val
+                    }
+                  ]
+                }
+              ]
+            }')
 
-          BLOCKS="${BLOCKS//\${COMMIT}/$COMMIT}"
-          BLOCKS="${BLOCKS//\${MSG}/$(printf '%s' "$MSG" | sed 's/"/\\"/g')}"
-          BLOCKS="${BLOCKS//\${RUN_NUMBER}/$RUN_NUMBER}"
-          BLOCKS="${BLOCKS/__VAL_PROD__/$VAL_PROD}"
-
-          curl -sS -X POST https://slack.com/api/chat.postMessage \
+          # Slack 전송 + 결과 검증 (ok=false면 실패 처리)
+          RESP=$(curl -sS -X POST "https://slack.com/api/chat.postMessage" \
             -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
-            -H 'Content-type: application/json; charset=utf-8' \
-            --data "$(jq -n --arg channel "$SLACK_CHANNEL_ID" --argjson blocks "$BLOCKS" '{channel:$channel, blocks:$blocks, text:"prod deploy"}')"
+            -H "Content-type: application/json; charset=utf-8" \
+            --data "$BODY")
+
+          echo "$RESP" | jq .
+
+          if [ "$(echo "$RESP" | jq -r '.ok')" != "true" ]; then
+            echo "Slack API error: $(echo "$RESP" | jq -r '.error // "unknown_error"')" >&2
+            exit 1
+          fi
 
 
       - name: Publish CI metrics to CloudWatch

@@ -44,3 +44,29 @@ jobs:
       #       --payload "$(jq -n --arg commit "${{ steps.info.outputs.sha }}" \
       #                        '{source:"github", auto:true, commit:$commit}')" \
       #       /dev/null
+
+
+      # ★ (핵심) CloudWatch로 CI 메트릭 퍼블리시
+      - name: Publish CI metrics to CloudWatch
+        if: always()
+        run: |
+          DURATION=$(( $(date +%s) - ${{ steps.start.outputs.ts }} ))
+          STATUS_VAL=0
+          if [ "${{ job.status }}" = "success" ]; then STATUS_VAL=1; fi
+
+          NS="CI/GitHub"  # 네임스페이스  # ★
+          DIM="repo=${{ github.repository }},branch=${{ github.ref_name }},workflow=${{ github.workflow }}"
+
+          aws cloudwatch put-metric-data \
+            --namespace "$NS" \
+            --metric-name BuildStatus \
+            --value "$STATUS_VAL" \
+            --unit Count \
+            --dimensions "$DIM"
+
+          aws cloudwatch put-metric-data \
+            --namespace "$NS" \
+            --metric-name BuildDurationSec \
+            --value "$DURATION" \
+            --unit Seconds \
+            --dimensions "$DIM"

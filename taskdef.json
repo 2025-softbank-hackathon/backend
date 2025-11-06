@@ -6,14 +6,17 @@
   "memory": "512",
   "executionRoleArn": "arn:aws:iam::137068226866:role/chatapp-dev-ecs-task-execution-role",
   "taskRoleArn": "arn:aws:iam::137068226866:role/chatapp-dev-ecs-task-role",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
   "containerDefinitions": [
     {
       "name": "chatapp-container",
       "image": "137068226866.dkr.ecr.ap-northeast-2.amazonaws.com/chatapp-dev:test-v1",
       "essential": true,
-      "cpu": 0,
       "portMappings": [
-        { "containerPort": 3000, "hostPort": 3000, "protocol": "tcp" }
+        { "containerPort": 3000, "protocol": "tcp" }
       ],
       "environment": [
         { "name": "DYNAMODB_TABLE_NAME", "value": "chatapp-dev-messages" },

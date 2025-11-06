@@ -1,0 +1,29 @@
+{
+  "family": "chatapp-dev-task-green",
+  "executionRoleArn": "arn:aws:iam::137068226866:role/chatapp-dev-ecs-task-execution-role",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "containerDefinitions": [
+    {
+      "name": "chatapp-container",
+      "image": "137068226866.dkr.ecr.ap-northeast-2.amazonaws.com/chatapp-dev:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/chatapp-dev",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "green"
+        }
+      }
+    }
+  ]
+}

@@ -3,7 +3,13 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: "taskdef.json"
+        TaskDefinition: "<TASK_DEFINITION>"
         LoadBalancerInfo:
           ContainerName: "chatapp-container"
           ContainerPort: 3000
+        PlatformVersion: "LATEST"
+        NetworkConfiguration:
+          AwsvpcConfiguration:
+            Subnets: ["subnet-04f2e774179a4f8a7", "subnet-05c7e7403756e0c39"] # Edit here
+            SecurityGroups: ["sg-0d5088846e28d7d99"]  # Edit here
+            AssignPublicIp: "DISABLED"

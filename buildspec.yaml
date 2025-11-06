@@ -40,13 +40,13 @@ phases:
       - echo "📂 Checking files before zipping..."
       - ls -al
 
-      # revision.zip 생성
+      # revision.zip 생성 (중요! 절대경로 X)
       - echo "🗜️ Creating revision.zip..."
-      - zip -j $CODEBUILD_SRC_DIR/revision.zip $CODEBUILD_SRC_DIR/appspec.yml $CODEBUILD_SRC_DIR/taskdef.json
+      - zip -j revision.zip appspec.yml taskdef.json
 
-      # zip 파일 내용 확인 (디버깅용)
+      # zip 파일 내용 확인
       - echo "🔍 Contents of revision.zip:"
-      - unzip -l $CODEBUILD_SRC_DIR/revision.zip
+      - unzip -l revision.zip
 
 artifacts:
   files:

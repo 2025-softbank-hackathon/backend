@@ -50,16 +50,19 @@ jobs:
       #       /dev/null
 
 
-      # ★ (핵심) CloudWatch로 CI 메트릭 퍼블리시
       - name: Publish CI metrics to CloudWatch
         if: always()
+        env:
+          NS: CI/GitHub
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          WORKFLOW: ${{ github.workflow }}
         run: |
           DURATION=$(( $(date +%s) - ${{ steps.start.outputs.ts }} ))
           STATUS_VAL=0
           if [ "${{ job.status }}" = "success" ]; then STATUS_VAL=1; fi
 
-          NS="CI/GitHub"
-          DIM="repo=${{ github.repository }},branch=${{ github.ref_name }},workflow=${{ github.workflow }}"
+          DIM="repo=$REPO,branch=$BRANCH,workflow=$WORKFLOW"
 
           aws cloudwatch put-metric-data \
             --namespace "$NS" \

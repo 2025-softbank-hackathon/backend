@@ -2,6 +2,9 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.7'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'jacoco'
+    id 'org.sonarqube' version '5.1.0.4882'
+    id 'org.owasp.dependencycheck' version '10.0.4'
 }
 
 group = 'com.example'
@@ -17,6 +20,12 @@ repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    imports {
+        mavenBom "org.testcontainers:testcontainers-bom:1.20.3"
+    }
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
@@ -26,11 +35,83 @@ dependencies {
     implementation 'software.amazon.awssdk:dynamodb-enhanced:2.25.64'
     implementation 'software.amazon.awssdk:auth:2.25.64'
     implementation 'software.amazon.awssdk:regions:2.25.64'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
     runtimeOnly 'org.springframework.boot:spring-boot-starter-actuator'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.mockito:mockito-core:5.14.2'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.14.2'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:testcontainers'
+    testImplementation 'org.testcontainers:localstack'
 }
 
-tasks.test {
+test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.70
+            }
+        }
+        rule {
+            element = 'CLASS'
+            excludes = [
+                    'com.example.chat.config.*',
+                    'com.example.chat.domain.*'
+            ]
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "chatapp-backend"
+        property "sonar.projectName", "chatapp-backend"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.java.coveragePlugin", "jacoco"
+        property "sonar.junit.reportPaths", "build/test-results/test"
+        property "sonar.jacoco.reportPaths", "build/jacoco/test.exec"
+        property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
+    }
+}
+
+dependencyCheck {
+    analyzers {
+        assemblyEnabled = false
+    }
+    failBuildOnCVSS = 8.0
+    formats = ['HTML', 'JSON']
+    outputDirectory = "$buildDir/reports/dependency-check"
+}
+
+tasks.register('qualityAll') {
+    group = "verification"
+    description = "Run tests, coverage, dependency-check, and sonar (requires token)"
+    dependsOn 'clean', 'test', 'jacocoTestReport', 'dependencyCheckAnalyze', 'sonar'
 }

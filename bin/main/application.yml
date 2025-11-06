@@ -18,7 +18,10 @@ app:
   dynamodb:
     table-name: ${DYNAMODB_TABLE_NAME:chatapp-dev-messages}
     region: ${AWS_REGION:ap-northeast-2}
-    ttl-seconds: 3600
+    ttl-seconds: 36000
+    endpoint: ${DYNAMODB_ENDPOINT:}
+    access-key: ${DYNAMODB_ACCESS_KEY:}
+    secret-key: ${DYNAMODB_SECRET_KEY:}
 
 management:
   endpoints:

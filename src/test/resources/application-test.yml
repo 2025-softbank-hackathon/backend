@@ -1,0 +1,11 @@
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+app:
+  dynamodb:
+    table-name: chatapp-dev-messages
+    region: ap-northeast-2
+

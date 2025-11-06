@@ -78,10 +78,10 @@ jobs:
             --unit Seconds \
             --dimensions "$DIM"
 
-            aws cloudwatch put-dashboard \
-              --region ap-northeast-2 \
-              --dashboard-name CI-Observability \
-              --dashboard-body "$(cat <<EOF
+          aws cloudwatch put-dashboard \
+            --region ap-northeast-2 \
+            --dashboard-name CI-Observability \
+            --dashboard-body "$(cat <<EOF
 {
   "widgets": [
     {

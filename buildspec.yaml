@@ -28,7 +28,8 @@ phases:
       - echo "🚀 Pushing Docker images to ECR..."
       - docker push ${FULL_IMAGE}
       - docker push ${ECR_URI}:latest
-      - echo "🧩 Rendering taskdef.json with new image..."
+
+      - echo "🧩 Updating taskdef.json with new image..."
       - |
         jq --arg IMG "${FULL_IMAGE}" '
           (.containerDefinitions[] | select(.name=="chatapp-container") | .image) = $IMG
@@ -36,15 +37,17 @@ phases:
       - mv taskdef.rendered.json taskdef.json
       - cat taskdef.json | jq '.'
 
-      # 파일 확인
       - echo "📂 Checking files before zipping..."
+      - pwd
       - ls -al
 
-      # revision.zip 생성 (중요! 절대경로 X)
-      - echo "🗜️ Creating revision.zip..."
-      - zip -j revision.zip appspec.yml taskdef.json
+      # ✅ 반드시 루트 디렉토리로 이동해서 zip 생성
+      - echo "🗜️ Creating revision.zip in root..."
+      - cd $CODEBUILD_SRC_DIR
+      - ls -al  # appspec.yml, taskdef.json 있는지 재확인
+      - zip -r revision.zip appspec.yml taskdef.json
 
-      # zip 파일 내용 확인
+      # zip 내부 내용 확인
       - echo "🔍 Contents of revision.zip:"
       - unzip -l revision.zip
 

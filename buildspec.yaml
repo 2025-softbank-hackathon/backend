@@ -40,4 +40,5 @@ artifacts:
   files:
     - appspec.yml
     - taskdef.json
+    - scripts/**/*
   discard-paths: yes

@@ -81,48 +81,49 @@ jobs:
           aws cloudwatch put-dashboard \
             --region ap-northeast-2 \
             --dashboard-name CI-Observability \
-            --dashboard-body "$(cat <<EOF
-      {
-        "widgets": [
-          {
-            "type": "metric",
-            "x": 0, "y": 0, "width": 12, "height": 6,
-            "properties": {
-              "title": "CI Success Rate (avg of BuildStatus)",
-              "region": "ap-northeast-2",
-              "stat": "Average",
-              "period": 60,
-              "yAxis": { "left": { "min": 0, "max": 1 } },
-              "metrics": [
-                [ "CI/GitHub", "BuildStatus",
-                  "repo", "$REPO",
-                  "branch", "$BRANCH",
-                  "workflow", "$WORKFLOW"
-                ]
-              ],
-              "view": "timeSeries",
-              "legend": { "position": "right" }
-            }
-          },
-          {
-            "type": "metric",
-            "x": 12, "y": 0, "width": 12, "height": 6,
-            "properties": {
-              "title": "Build Duration (p95, sec)",
-              "region": "ap-northeast-2",
-              "stat": "p95",
-              "period": 60,
-              "metrics": [
-                [ "CI/GitHub", "BuildDurationSec",
-                  "repo", "$REPO",
-                  "branch", "$BRANCH",
-                  "workflow", "$WORKFLOW"
-                ]
-              ],
-              "view": "timeSeries"
-            }
-          }
-        ]
-      }
-      EOF
-      )"
+            --dashboard-body "$(
+              jq -nc \
+                --arg repo "$REPO" \
+                --arg branch "$BRANCH" \
+                --arg workflow "$WORKFLOW" \
+                '{
+                  widgets: [
+                    {
+                      type: "metric",
+                      x: 0, y: 0, width: 12, height: 6,
+                      properties: {
+                        title: "CI Success Rate (avg of BuildStatus)",
+                        region: "ap-northeast-2",
+                        stat: "Average",
+                        period: 60,
+                        yAxis: { left: { min: 0, max: 1 } },
+                        metrics: [[
+                          "CI/GitHub", "BuildStatus",
+                          "repo", $repo,
+                          "branch", $branch,
+                          "workflow", $workflow
+                        ]],
+                        view: "timeSeries",
+                        legend: { position: "right" }
+                      }
+                    },
+                    {
+                      type: "metric",
+                      x: 12, y: 0, width: 12, height: 6,
+                      properties: {
+                        title: "Build Duration (p95, sec)",
+                        region: "ap-northeast-2",
+                        stat: "p95",
+                        period: 60,
+                        metrics: [[
+                          "CI/GitHub", "BuildDurationSec",
+                          "repo", $repo,
+                          "branch", $branch,
+                          "workflow", $workflow
+                        ]],
+                        view: "timeSeries"
+                      }
+                    }
+                  ]
+                }'
+            )"

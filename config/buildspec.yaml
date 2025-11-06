@@ -13,7 +13,7 @@ phases:
       - echo "Checking files..."
       - ls -la appspec.yaml taskdef.json
       - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$(echo $ECR_URI | cut -d'/' -f1)"
-      - IMAGE_TAG=$(TZ='Asia/Seoul' date '+%Y%m%d%H%M%S')
+      - export IMAGE_TAG=$(TZ='Asia/Seoul' date '+%Y%m%d%H%M%S')
   build:
     commands:
       - docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .

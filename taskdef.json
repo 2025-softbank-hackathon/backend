@@ -15,5 +15,5 @@
   "networkMode": "awsvpc",
   "cpu": "256",
   "memory": "512",
-  "family": "chatapp-dev-task-blue"
+  "family": "chatapp-dev-task-green"
 }

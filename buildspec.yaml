@@ -32,3 +32,4 @@ artifacts:
   files:
     - appspec.yaml
   discard-paths: yes
+  base-directory: .

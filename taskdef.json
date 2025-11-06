@@ -9,7 +9,7 @@
   "containerDefinitions": [
     {
       "name": "softbank-api",
-      "image": "<IMAGE1_NAME>",
+      "image": "REPLACE_IMAGE_URI",
       "essential": true,
       "portMappings": [
         {

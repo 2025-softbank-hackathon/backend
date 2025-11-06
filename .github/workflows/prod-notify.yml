@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Mark start
         id: start
-        run: echo "ts=$(data +%s)" >> $GITHUB_OUTPUT
+        run: echo "ts=$(date +%s)" >> $GITHUB_OUTPUT
 
       - name: Extract info
         id: info

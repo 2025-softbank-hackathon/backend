@@ -11,8 +11,7 @@ phases:
   pre_build:
     commands:
       - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" \
-        | docker login --username AWS --password-stdin "$(echo $ECR_URI | cut -d'/' -f1)"
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$(echo $ECR_URI | cut -d'/' -f1)"
       - IMAGE_TAG=$(TZ='Asia/Seoul' date '+%Y%m%d%H%M%S')
       - FULL_IMAGE="${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}"
       - echo "Image will be ${FULL_IMAGE}"

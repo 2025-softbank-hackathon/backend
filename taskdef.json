@@ -1,5 +1,6 @@
 {
   "family": "chatapp-dev-task-green",
+  "taskRoleArn": "arn:aws:iam::137068226866:role/softbank-api-task-role",
   "executionRoleArn": "arn:aws:iam::137068226866:role/chatapp-dev-ecs-task-execution-role",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
@@ -8,13 +9,10 @@
   "containerDefinitions": [
     {
       "name": "chatapp-container",
-      "image": "137068226866.dkr.ecr.ap-northeast-2.amazonaws.com/chatapp-dev:latest",
+      "image": "REPLACE_WITH_IMAGE",
       "essential": true,
       "portMappings": [
-        {
-          "containerPort": 3000,
-          "hostPort": 3000
-        }
+        { "containerPort": 3000, "hostPort": 3000, "protocol": "tcp" }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",

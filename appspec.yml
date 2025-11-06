@@ -3,7 +3,7 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: taskdef.json
+        TaskDefinition: "taskdef.json"
         LoadBalancerInfo:
-          ContainerName: chatapp-container
+          ContainerName: "chatapp-container"
           ContainerPort: 3000

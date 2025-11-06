@@ -2,10 +2,10 @@ version: 0.2
 
 env:
   variables:
-    IMAGE_NAME: "softbank-api"                 # ECR repo 이름과 일치
+    IMAGE_NAME: "softbank-api"
     APP_VERSION: "1.0.0"
   parameter-store:
-    ECR_URI: "/softbank/api/ecr-uri"           # 예: 1370.../softbank-api
+    ECR_URI: "/softbank/api/ecr-uri"
 
 phases:
   pre_build:
@@ -28,7 +28,6 @@ phases:
       - echo "Pushing Docker images to ECR..."
       - docker push ${FULL_IMAGE}
       - docker push ${ECR_URI}:latest
-      # === taskdef.json 이미지 치환 ===
       - echo "Rendering taskdef.json with new image..."
       - |
         jq --arg IMG "${FULL_IMAGE}" '
@@ -42,4 +41,3 @@ artifacts:
     - appspec.yml
     - taskdef.json
   discard-paths: yes
-  base-directory: .

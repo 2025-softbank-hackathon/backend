@@ -4,28 +4,26 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-@Testcontainers(disabledWithoutDocker = true)
 class RedisIntegrationTest {
 
-    @Container
-    static GenericContainer<?> redis = new GenericContainer<>("redis:7.2-alpine").withExposedPorts(6379);
+    private static final String HOST = System.getenv().getOrDefault("REDIS_HOST", "localhost");
+    private static final int PORT = Integer.parseInt(System.getenv().getOrDefault("REDIS_PORT", "6379"));
 
     static StringRedisTemplate template;
 
     @BeforeAll
     static void init() {
-        assumeTrue(DockerClientFactory.instance().isDockerAvailable(), "Docker not available");
+        assumeTrue(isRedisReachable(), () -> "Redis not reachable at %s:%d".formatted(HOST, PORT));
 
-        LettuceConnectionFactory connectionFactory =
-                new LettuceConnectionFactory(redis.getHost(), redis.getFirstMappedPort());
+        LettuceConnectionFactory connectionFactory = new LettuceConnectionFactory(HOST, PORT);
         connectionFactory.afterPropertiesSet();
         template = new StringRedisTemplate(connectionFactory);
     }
@@ -34,6 +32,15 @@ class RedisIntegrationTest {
     void ping_works() {
         template.opsForValue().set("k", "v");
         assertThat(template.opsForValue().get("k")).isEqualTo("v");
+    }
+
+    private static boolean isRedisReachable() {
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress(HOST, PORT), 200);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 }
 

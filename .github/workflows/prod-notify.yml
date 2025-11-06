@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Mark start
         id: start
-        run: echo "ts=$(data +%s)" >> $GITHUB_OUTPUT
+        run: echo "ts=$(date +%s)" >> $GITHUB_OUTPUT
 
       - name: Extract info
         id: info
@@ -50,16 +50,19 @@ jobs:
       #       /dev/null
 
 
-      # ★ (핵심) CloudWatch로 CI 메트릭 퍼블리시
       - name: Publish CI metrics to CloudWatch
         if: always()
+        env:
+          NS: CI/GitHub
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          WORKFLOW: ${{ github.workflow }}
         run: |
           DURATION=$(( $(date +%s) - ${{ steps.start.outputs.ts }} ))
           STATUS_VAL=0
           if [ "${{ job.status }}" = "success" ]; then STATUS_VAL=1; fi
 
-          NS="CI/GitHub"
-          DIM="repo=${{ github.repository }},branch=${{ github.ref_name }},workflow=${{ github.workflow }}"
+          DIM="repo=$REPO,branch=$BRANCH,workflow=$WORKFLOW"
 
           aws cloudwatch put-metric-data \
             --namespace "$NS" \
@@ -74,3 +77,52 @@ jobs:
             --value "$DURATION" \
             --unit Seconds \
             --dimensions "$DIM"
+
+          aws cloudwatch put-dashboard \
+            --region ap-northeast-2 \
+            --dashboard-name CI-Observability \
+            --dashboard-body "$(cat <<EOF
+          {
+            "widgets": [
+              {
+                "type": "metric",
+                "x": 0, "y": 0, "width": 12, "height": 6,
+                "properties": {
+                  "title": "CI Success Rate (avg of BuildStatus)",
+                  "region": "ap-northeast-2",
+                  "stat": "Average",
+                  "period": 60,
+                  "yAxis": { "left": { "min": 0, "max": 1 } },
+                  "metrics": [
+                    [ "CI/GitHub", "BuildStatus",
+                      "repo", "$REPO",
+                      "branch", "$BRANCH",
+                      "workflow", "$WORKFLOW"
+                    ]
+                  ],
+                  "view": "timeSeries",
+                  "legend": { "position": "right" }
+                }
+              },
+              {
+                "type": "metric",
+                "x": 12, "y": 0, "width": 12, "height": 6,
+                "properties": {
+                  "title": "Build Duration (p95, sec)",
+                  "region": "ap-northeast-2",
+                  "stat": "p95",
+                  "period": 60,
+                  "metrics": [
+                    [ "CI/GitHub", "BuildDurationSec",
+                      "repo", "$REPO",
+                      "branch", "$BRANCH",
+                      "workflow", "WORKFLOW"
+                    ]
+                  ],
+                  "view": "timeSeries"
+                }
+              }
+            ]
+          }
+          EOF
+          )"

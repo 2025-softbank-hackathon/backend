@@ -35,11 +35,10 @@ phases:
           (.containerDefinitions[] | select(.name=="chatapp-container") | .image) = $IMG
         ' taskdef.json > taskdef.rendered.json
       - mv taskdef.rendered.json taskdef.json
-
-      - echo "🗜️ Zipping deployment artifacts..."
-      - zip -r revision.zip appspec.yaml taskdef.json
+      - cat taskdef.json | jq '.'
 
 artifacts:
   files:
-    - revision.zip
+    - appspec.yaml
+    - taskdef.json
   discard-paths: yes

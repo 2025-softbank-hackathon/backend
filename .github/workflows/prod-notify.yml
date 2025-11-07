@@ -29,31 +29,11 @@ jobs:
           aws-region: ap-northeast-2
           role-to-assume: ${{ github.ref_name == 'prod' && secrets.AWS_ROLE_ARN_PROD || secrets.AWS_ROLE_ARN_DEV }}
 
-      - name: Send Slack message
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          COMMIT="${{ steps.info.outputs.sha }}"
-          MSG="${{ steps.info.outputs.commit_msg }}"
-          PAYLOAD=$(jq -n --arg text "*prod* push: \`$COMMIT\`\n$MSG" \
-             '{text:$text}')
-          curl -X POST -H 'Content-type: application/json' \
-               --data "$PAYLOAD" "$SLACK_WEBHOOK_URL"
-
-      # - name: Auto trigger if keyword present
-      #   if: contains(steps.info.outputs.commit_msg, '[auto-deploy]')
-      #   run: |
-      #     aws lambda invoke \
-      #       --function-name softbank-prod-trigger \
-      #       --payload "$(jq -n --arg commit "${{ steps.info.outputs.sha }}" \
-      #                        '{source:"github", auto:true, commit:$commit}')" \
-      #       /dev/null
-
-
       - name: Send Slack interactive message
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}   # xoxb-***
           SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID }}     # C09NN0X1TF1
+          POKEMON_IMG_URL: "https://assets.pokemon.com/assets/cms2/img/pokedex/full/025.png" # 예시: 피카츄. 가능하면 S3/CloudFront의 본인 이미지로 교체
         run: |
           set -euo pipefail
 
@@ -62,6 +42,13 @@ jobs:
           REPO="${{ github.repository }}"
           RUN_ID="${{ github.run_id }}"
           RUN_NUMBER="${{ github.run_number }}"
+
+          # auto 여부 감지 (대소문자 무시)
+          if echo "$MSG" | grep -iq 'deploy: auto'; then
+            AUTO=true
+          else
+            AUTO=false
+          fi
 
           # 버튼 value에 컨텍스트(JSON) 담기
           VAL_PROD=$(jq -cn \
@@ -72,40 +59,48 @@ jobs:
             --arg strategy "canary" \
             '{repo:$repo,run_id:$run_id,sha:$sha,env:$env,strategy:$strategy}')
 
-          # blocks를 jq로 조립 (문자열 치환 X, 이스케이프 걱정 X)
+          # Slack blocks 조립 (버튼은 AUTO=false일 때만 포함)
           BODY=$(jq -cn \
             --arg channel "$SLACK_CHANNEL_ID" \
             --arg commit "$COMMIT" \
             --arg msg "$MSG" \
             --arg runnum "$RUN_NUMBER" \
             --arg val "$VAL_PROD" \
-            '{
+            --arg img "$POKEMON_IMG_URL" \
+            --arg text_fallback "prod deploy" \
+            --arg title "🚀 PROD 배포 준비 완료" \
+            --arg subtitle "버튼을 눌러 CodePipeline을 시작하세요" \
+            --argcta "Deploy PROD" \
+            --argjson auto "$AUTO" \
+            '
+            def header_block(t): {type:"header", text:{type:"plain_text", text:t, emoji:true}};
+            def hero_img(u): {type:"image", image_url:u, alt_text:"hero"};
+            def info_section(commit; msg; runnum):
+              {type:"section",
+              text:{type:"mrkdwn",
+                    text: ("*prod* push: `\(.commit)`\n\(.msg)\nRun #\(.runnum)")}};
+            def subtitle_block(s): {type:"context", elements:[{type:"mrkdwn", text:s}]};
+            def actions_block(val; cta):
+              {type:"actions", block_id:"deploy_panel", elements:[
+                {type:"button", action_id:"deploy_prod",
+                text:{type:"plain_text", text:cta},
+                style:"danger",
+                value:val}
+              ]};
+
+            {
               channel: $channel,
-              text: "prod deploy",
-              blocks: [
-                {
-                  type: "section",
-                  text: { type: "mrkdwn",
-                    text: ("*prod* push: `\($commit)`\n\($msg)\nRun #\($runnum)")
-                  }
-                },
-                {
-                  type: "actions",
-                  block_id: "deploy_panel",
-                  elements: [
-                    {
-                      type: "button",
-                      action_id: "deploy_prod",
-                      text: { type: "plain_text", text: "🚀 Deploy PROD" },
-                      style: "danger",
-                      value: $val
-                    }
-                  ]
-                }
-              ]
+              text: $text_fallback,
+              blocks:
+                [
+                  header_block($title),
+                  hero_img($img),
+                  info_section($commit; $msg; $runnum),
+                  subtitle_block($subtitle)
+                ]
+                + (if $auto then [] else [ actions_block($val; $cta) ] end)
             }')
 
-          # Slack 전송 + 결과 검증 (ok=false면 실패 처리)
           RESP=$(curl -sS -X POST "https://slack.com/api/chat.postMessage" \
             -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
             -H "Content-type: application/json; charset=utf-8" \

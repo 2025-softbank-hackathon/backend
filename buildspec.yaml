@@ -38,4 +38,4 @@ artifacts:
     - appspec.yaml
     - taskdef.json
     - imagedefinitions.json
-  discard-paths: yes
+  discard-paths: no

@@ -29,7 +29,6 @@ phases:
       - docker push ${FULL_IMAGE}
       - docker push ${ECR_URI}:latest
 
-      # ✅ ECS Blue/Green expects 'imagedefinitions.json'
       - echo "🧩 Creating imagedefinitions.json..."
       - printf '[{"name":"chatapp-container","imageUri":"%s"}]' ${FULL_IMAGE} > imagedefinitions.json
       - cat imagedefinitions.json

@@ -31,9 +31,9 @@ jobs:
 
       - name: Send Slack interactive message
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}   # xoxb-***
-          SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID }}     # C09NN0X1TF1
-          POKEMON_IMG_URL: "https://assets.pokemon.com/assets/cms2/img/pokedex/full/025.png" # 예시: 피카츄. 가능하면 S3/CloudFront의 본인 이미지로 교체
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID }}
+          POKEMON_IMG_URL: "https://i.namu.wiki/i/WQ_xd3bMy_DsULPsQNgDq-FPZ9hJGMG2l-UclW-1TOkw0AM8vr3DRuiEBwCyq0YquFyOPHnnfmL0yuYs9iowDw.webp"
         run: |
           set -euo pipefail
 
@@ -59,7 +59,7 @@ jobs:
             --arg strategy "canary" \
             '{repo:$repo,run_id:$run_id,sha:$sha,env:$env,strategy:$strategy}')
 
-          # Slack blocks 조립 (버튼은 AUTO=false일 때만 포함)
+          # Slack blocks 조립
           BODY=$(jq -cn \
             --arg channel "$SLACK_CHANNEL_ID" \
             --arg commit "$COMMIT" \
@@ -70,7 +70,7 @@ jobs:
             --arg text_fallback "prod deploy" \
             --arg title "🚀 PROD 배포 준비 완료" \
             --arg subtitle "버튼을 눌러 CodePipeline을 시작하세요" \
-            --argcta "Deploy PROD" \
+            --arg cta "Deploy PROD" \
             --argjson auto "$AUTO" \
             '
             def header_block(t): {type:"header", text:{type:"plain_text", text:t, emoji:true}};
@@ -112,6 +112,7 @@ jobs:
             echo "Slack API error: $(echo "$RESP" | jq -r '.error // "unknown_error"')" >&2
             exit 1
           fi
+
 
 
       - name: Publish CI metrics to CloudWatch

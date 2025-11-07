@@ -29,31 +29,14 @@ phases:
       - docker push ${FULL_IMAGE}
       - docker push ${ECR_URI}:latest
 
-      - echo "🧩 Updating taskdef.json with new image..."
-      - |
-        jq --arg IMG "${FULL_IMAGE}" '
-          (.containerDefinitions[] | select(.name=="chatapp-container") | .image) = $IMG
-        ' taskdef.json > taskdef.rendered.json
-      - mv taskdef.rendered.json taskdef.json
-      - cat taskdef.json | jq '.'
-
-      - echo "📂 Checking files before zipping..."
-      - pwd
-      - ls -al
-
-      # ✅ 반드시 루트 디렉토리로 이동해서 zip 생성
-      - echo "🗜️ Creating revision.zip in root..."
-      - cd $CODEBUILD_SRC_DIR
-      - ls -al  # appspec.yml, taskdef.json 있는지 재확인
-      - zip -r revision.zip appspec.yml taskdef.json
-
-      # zip 내부 내용 확인
-      - echo "🔍 Contents of revision.zip:"
-      - unzip -l revision.zip
+      # ✅ imageDetail.json 생성 (ECS Blue/Green용)
+      - echo "🧩 Creating imagedefinitions.json..."
+      - printf '[{"name":"chatapp-container","imageUri":"%s"}]' ${FULL_IMAGE} > imageDetail.json
+      - cat imageDetail.json
 
 artifacts:
   files:
-    - revision.zip
-    - appspec.yml
+    - appspec.yaml
     - taskdef.json
+    - imageDetail.json
   discard-paths: yes

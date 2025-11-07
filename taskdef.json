@@ -13,7 +13,7 @@
   "containerDefinitions": [
     {
       "name": "chatapp-container",
-      "image": "137068226866.dkr.ecr.ap-northeast-2.amazonaws.com/chatapp-dev:test-v1",
+      "image": "<IMAGE1_NAME>",
       "essential": true,
       "portMappings": [
         { "containerPort": 3000, "protocol": "tcp" }

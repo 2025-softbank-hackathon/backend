@@ -29,14 +29,14 @@ phases:
       - docker push ${FULL_IMAGE}
       - docker push ${ECR_URI}:latest
 
-      # ✅ CodePipeline에서 ECS 이미지 교체에 사용하는 JSON 파일 생성
-      - echo "🧩 Creating imageDetail.json..."
-      - printf '[{"name":"chatapp-container","imageUri":"%s"}]' ${FULL_IMAGE} > imageDetail.json
-      - cat imageDetail.json
+      # ✅ ECS Blue/Green expects 'imagedefinitions.json'
+      - echo "🧩 Creating imagedefinitions.json..."
+      - printf '[{"name":"chatapp-container","imageUri":"%s"}]' ${FULL_IMAGE} > imagedefinitions.json
+      - cat imagedefinitions.json
 
 artifacts:
   files:
     - appspec.yaml
     - taskdef.json
-    - imageDetail.json
+    - imagedefinitions.json
   discard-paths: yes

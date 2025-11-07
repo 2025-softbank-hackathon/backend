@@ -3,7 +3,10 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: "<TASK_DEFINITION>"
+        TaskDefinition:
+          Fn::GetArtifactAtt:
+            - "BuildArtifact"
+            - "taskdef.json"
         LoadBalancerInfo:
           ContainerName: "chatapp-container"
           ContainerPort: 3000

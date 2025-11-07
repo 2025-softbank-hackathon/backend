@@ -4,7 +4,6 @@ env:
   variables:
     IMAGE_NAME: "softbank-api"
     APP_VERSION: "1.0.0"
-    CONTAINER_NAME: "chatapp-container"
   parameter-store:
     ECR_URI: "/softbank/api/ecr-uri"
 
@@ -30,10 +29,20 @@ phases:
       - docker push ${FULL_IMAGE}
       - docker push ${ECR_URI}:latest
 
-      - echo "🧩 Updating taskdef.json with new image..."
+      - echo "📝 Creating deployment configuration..."
       - |
-        jq --arg IMG "${FULL_IMAGE}" --arg NAME "${CONTAINER_NAME}" '
-          (.containerDefinitions[] | select(.name==$NAME) | .image) = $IMG
-        ' taskdef.json > taskdef.rendered.json
-      - mv taskdef.rendered.json taskdef.json
-      - cat taskdef.json | jq '.'
+        cat > .env.deploy << EOF
+        FULL_IMAGE=${FULL_IMAGE}
+        ECR_URI=${ECR_URI}
+        AWS_REGION=${AWS_DEFAULT_REGION}
+        DYNAMODB_TABLE_NAME=chatapp-dev-messages
+        REDIS_HOST=chatapp-dev-redis.oi0xeh.ng.0001.apn2.cache.amazonaws.com
+        REDIS_PORT=6379
+        EOF
+      - cat .env.deploy
+
+artifacts:
+  files:
+    - appspec.yml
+    - scripts/**/*
+    - .env.deploy

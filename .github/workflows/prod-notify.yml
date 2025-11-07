@@ -33,7 +33,7 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID }}
-          POKEMON_IMG_URL: "https://i.namu.wiki/i/WQ_xd3bMy_DsULPsQNgDq-FPZ9hJGMG2l-UclW-1TOkw0AM8vr3DRuiEBwCyq0YquFyOPHnnfmL0yuYs9iowDw.webp"
+          POKEMON_IMG_URL: "https://i2.ruliweb.com/ori/23/04/01/1873c607dd5525908.gif"
         run: |
           set -euo pipefail
 

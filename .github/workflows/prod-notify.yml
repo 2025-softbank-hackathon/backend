@@ -33,7 +33,7 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ vars.SLACK_CHANNEL_ID }}
-          POKEMON_IMG_URL: "https://i2.ruliweb.com/ori/23/04/01/1873c607dd5525908.gif"
+          POKEMON_IMG_URL: "https://img1.daumcdn.net/thumb/R1280x0.fjpg/?fname=http://t1.daumcdn.net/brunch/service/user/gIN8/image/Bbg6YmZxj5wbt4Nwiaj43bJSwT4.jpg"
         run: |
           set -euo pipefail
 
@@ -77,17 +77,18 @@ jobs:
           def hero_img(u): {type:"image", image_url:u, alt_text:"hero"};
           def info_section(commit; msg; runnum):
             {type:"section",
-            text:{type:"mrkdwn",
-                  text: ("*prod* push: `\(.commit)`\n\(.msg)\nRun #\(.runnum)")}};
+             text:{type:"mrkdwn",
+                   # ✅ 변수 보간은 \(변수명) — 점(.) 빼야 함
+                   text: ("*prod* push: `\(commit)`\n\(msg)\nRun #\(runnum)")}};
           def subtitle_block(s): {type:"context", elements:[{type:"mrkdwn", text:s}]};
           def actions_block(val; cta):
             {type:"actions", block_id:"deploy_panel", elements:[
               {type:"button", action_id:"deploy_prod",
-              text:{type:"plain_text", text:cta},
-              style:"danger",
-              value:val}
+               text:{type:"plain_text", text:cta},
+               style:"danger",
+               value:val}
             ]};
-
+        
           {
             channel: $channel,
             text: $text_fallback,
@@ -193,3 +194,4 @@ jobs:
                   ]
                 }'
             )"
+

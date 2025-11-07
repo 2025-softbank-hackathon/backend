@@ -2,7 +2,7 @@ name: prod-push-notify
 
 on:
   push:
-    branches: [ "not-prod" ]
+    branches: [ "prod" ]
 
 jobs:
   notify-and-maybe-trigger:

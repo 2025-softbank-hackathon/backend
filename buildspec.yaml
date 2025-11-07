@@ -29,13 +29,17 @@ phases:
       - docker push ${FULL_IMAGE}
       - docker push ${ECR_URI}:latest
 
-      - echo "🧩 Creating imagedefinitions.json..."
-      - printf '[{"name":"chatapp-container","imageUri":"%s"}]' ${FULL_IMAGE} > imagedefinitions.json
-      - cat imagedefinitions.json
+      - echo "🧩 Updating taskdef.json with new image..."
+      - |
+        jq --arg IMG "${FULL_IMAGE}" '
+          (.containerDefinitions[] | select(.name=="chatapp-container") | .image) = $IMG
+        ' taskdef.json > taskdef.rendered.json
+      - mv taskdef.rendered.json taskdef.json
+
+      - echo "🗜️ Zipping deployment artifacts..."
+      - zip -r revision.zip appspec.yaml taskdef.json
 
 artifacts:
   files:
-    - appspec.yaml
-    - taskdef.json
-    - imagedefinitions.json
-  discard-paths: no
+    - revision.zip
+  discard-paths: yes

@@ -36,9 +36,3 @@ phases:
         ' taskdef.json > taskdef.rendered.json
       - mv taskdef.rendered.json taskdef.json
       - cat taskdef.json | jq '.'
-
-artifacts:
-  files:
-    - appspec.yaml
-    - taskdef.json
-  discard-paths: yes

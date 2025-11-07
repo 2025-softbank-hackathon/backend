@@ -13,10 +13,10 @@
   "containerDefinitions": [
     {
       "name": "chatapp-container",
-      "image": "137068226866.dkr.ecr.ap-northeast-2.amazonaws.com/chatapp-dev:test-v1",
+      "image": "137068226866.dkr.ecr.ap-northeast-2.amazonaws.com/chatapp-dev:latest",
       "essential": true,
       "portMappings": [
-        { "containerPort": 3000, "protocol": "tcp" }
+        { "containerPort": 3000, "hostPort": 3000, "protocol": "tcp" }
       ],
       "environment": [
         { "name": "DYNAMODB_TABLE_NAME", "value": "chatapp-dev-messages" },
@@ -24,13 +24,6 @@
         { "name": "AWS_REGION", "value": "ap-northeast-2" },
         { "name": "REDIS_PORT", "value": "6379" }
       ],
-      "healthCheck": {
-        "command": ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"],
-        "interval": 30,
-        "retries": 3,
-        "startPeriod": 60,
-        "timeout": 5
-      },
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {

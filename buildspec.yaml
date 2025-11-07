@@ -29,8 +29,8 @@ phases:
       - docker push ${FULL_IMAGE}
       - docker push ${ECR_URI}:latest
 
-      # ✅ imageDetail.json 생성 (ECS Blue/Green용)
-      - echo "🧩 Creating imagedefinitions.json..."
+      # ✅ CodePipeline에서 ECS 이미지 교체에 사용하는 JSON 파일 생성
+      - echo "🧩 Creating imageDetail.json..."
       - printf '[{"name":"chatapp-container","imageUri":"%s"}]' ${FULL_IMAGE} > imageDetail.json
       - cat imageDetail.json
 

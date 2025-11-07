@@ -42,7 +42,6 @@ phases:
       - cat .env.deploy
 
 artifacts:
-  base-directory: BACKEND/
   files:
     - appspec.yml
     - scripts/**/*

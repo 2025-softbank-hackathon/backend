@@ -51,12 +51,20 @@ jobs:
           fi
 
           # 버튼 value에 컨텍스트(JSON) 담기
-          VAL_PROD=$(jq -cn \
+          VAL_CANARY=$(jq -cn \
             --arg repo "$REPO" \
             --arg run_id "$RUN_ID" \
             --arg sha "$COMMIT" \
             --arg env "prod" \
             --arg strategy "canary" \
+            '{repo:$repo,run_id:$run_id,sha:$sha,env:$env,strategy:$strategy}')
+
+          VAL_BG=$(jq -cn \
+            --arg repo "$REPO" \
+            --arg run_id "$RUN_ID" \
+            --arg sha "$COMMIT" \
+            --arg env "prod" \
+            --arg strategy "bluegreen" \
             '{repo:$repo,run_id:$run_id,sha:$sha,env:$env,strategy:$strategy}')
 
           # Slack blocks 조립
@@ -65,12 +73,14 @@ jobs:
           --arg commit "$COMMIT" \
           --arg msg "$MSG" \
           --arg runnum "$RUN_NUMBER" \
-          --arg val "$VAL_PROD" \
+          --arg val_canary "$VAL_CANARY" \
+          --arg val_bg "$VAL_BG" \
           --arg img "$POKEMON_IMG_URL" \
           --arg text_fallback "prod deploy" \
           --arg title "🚀 PROD 배포 준비 완료" \
           --arg subtitle "버튼을 눌러 CodePipeline을 시작하세요" \
-          --arg cta "Deploy PROD" \
+          --arg cta_canary "Canary 10%" \
+          --arg cta_bg "Blue/Green 100%" \
           --argjson auto "$AUTO" \
           '
           def header_block(t): {type:"header", text:{type:"plain_text", text:t, emoji:true}};
@@ -78,17 +88,20 @@ jobs:
           def info_section(commit; msg; runnum):
             {type:"section",
              text:{type:"mrkdwn",
-                   # ✅ 변수 보간은 \(변수명) — 점(.) 빼야 함
-                   text: ("*prod* push: `\(commit)`\n\(msg)\nRun #\(runnum)")}};
+               text: ("*prod* push: `\(commit)`\n\(msg)\nRun #\(runnum)")}};
           def subtitle_block(s): {type:"context", elements:[{type:"mrkdwn", text:s}]};
-          def actions_block(val; cta):
+          def actions_block(val_canary; cta_canary; val_bg; cta_bg):
             {type:"actions", block_id:"deploy_panel", elements:[
-              {type:"button", action_id:"deploy_prod",
-               text:{type:"plain_text", text:cta},
+              {type:"button", action_id:"deploy_prod_canary",
+               text:{type:"plain_text", text:cta_canary},
+               style:"primary",
+               value:val_canary},
+              {type:"button", action_id:"deploy_prod_bg",
+               text:{type:"plain_text", text:cta_bg},
                style:"danger",
-               value:val}
+               value:val_bg}
             ]};
-        
+
           {
             channel: $channel,
             text: $text_fallback,
@@ -99,7 +112,7 @@ jobs:
                 info_section($commit; $msg; $runnum),
                 subtitle_block($subtitle)
               ]
-              + (if $auto then [] else [ actions_block($val; $cta) ] end)
+              + (if $auto then [] else [ actions_block($val_canary; $cta_canary; $val_bg; $cta_bg) ] end)
             )
           }')
 
@@ -114,6 +127,7 @@ jobs:
             echo "Slack API error: $(echo "$RESP" | jq -r '.error // "unknown_error"')" >&2
             exit 1
           fi
+
 
 
 

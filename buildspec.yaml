@@ -18,6 +18,7 @@ phases:
 
   build:
     commands:
+      - ./gradlew clean bootJar --no-daemon --configuration-cache --build-cache --parallel -x test
       - echo "🚧 Building Docker image..."
       - docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
       - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${FULL_IMAGE}
@@ -46,3 +47,7 @@ artifacts:
     - appspec.yml
     - scripts/**/*
     - .env.deploy
+cache:
+  paths:
+    - '/root/.gradle/caches/**/*'
+    - '/root/.gradle/wrapper/**/*'

@@ -40,13 +40,13 @@ phases:
       - docker push ${ECR_URI}:latest
       - echo "📝 Creating deployment configuration..."
       - |
-        cat > .env.deploy << 'EOF'
+        cat > .env.deploy << EOF
         FULL_IMAGE=${FULL_IMAGE}
         ECR_URI=${ECR_URI}
         AWS_REGION=${AWS_DEFAULT_REGION}
         EOF
       - |
-        cat > .env.app << 'EOF'
+        cat > .env.app << EOF
         DYNAMODB_TABLE_NAME=chatapp-dev-messages
         REDIS_HOST=chatapp-dev-redis.oi0xeh.ng.0001.apn2.cache.amazonaws.com
         REDIS_PORT=6379
@@ -54,8 +54,7 @@ phases:
         SPRING_DATA_REDIS_HOST=chatapp-dev-redis.oi0xeh.ng.0001.apn2.cache.amazonaws.com
         SPRING_DATA_REDIS_PORT=6379
         EOF
-      - source .env.deploy
-      - envsubst < .env.deploy > .env.deploy.tmp && mv .env.deploy.tmp .env.deploy
+      - echo "📋 Generated deployment files:"
       - cat .env.deploy
       - cat .env.app
 

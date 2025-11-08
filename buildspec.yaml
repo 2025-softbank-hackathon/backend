@@ -10,25 +10,33 @@ env:
 phases:
   pre_build:
     commands:
+      - set -euo pipefail
       - echo "🔐 Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$(echo $ECR_URI | cut -d'/' -f1)"
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" docker login --username AWS --password-stdin "$(echo $ECR_URI | cut -d'/' -f1)"
+
+      # ▶️ 태그 계산 + 다음 phase까지 유지 (BASH_ENV)
       - IMAGE_TAG=$(TZ='Asia/Seoul' date '+%Y%m%d%H%M%S')
       - FULL_IMAGE="${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}"
+      - echo "export IMAGE_TAG=${IMAGE_TAG}"        >> $BASH_ENV
+      - echo "export FULL_IMAGE=${FULL_IMAGE}"      >> $BASH_ENV
+      - echo "export ECR_URI=${ECR_URI}"            >> $BASH_ENV
       - echo "📦 Image will be ${FULL_IMAGE}"
 
   build:
     commands:
-      - ./gradlew clean bootJar --no-daemon --configuration-cache --build-cache --parallel -x test
-      - ls -al
-      - ls -al build
-      - ls -al build/libs
+      - set -euo pipefail
+      # ⚠️ clean 제거: 캐시 살려서 빌드 단축. 테스트는 여전히 제외
+      - ./gradlew bootJar --no-daemon --configuration-cache --build-cache --parallel -x test
       - echo "🚧 Building Docker image..."
+      # 필요 시 아키텍처 고정 (예: x86_64 빌더에서 ARM 이미지가 필요하면 수정)
+      # - docker buildx build --platform linux/amd64 -t ${IMAGE_NAME}:${IMAGE_TAG} .
       - docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
       - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${FULL_IMAGE}
       - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:latest
 
   post_build:
     commands:
+      - set -euo pipefail
       - echo "🚀 Pushing Docker images to ECR..."
       - docker push ${FULL_IMAGE}
       - docker push ${ECR_URI}:latest
@@ -50,6 +58,7 @@ artifacts:
     - appspec.yml
     - scripts/**/*
     - .env.deploy
+
 cache:
   paths:
     - '/root/.gradle/caches/**/*'

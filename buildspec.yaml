@@ -1,68 +1,35 @@
-version: 0.2
+post_build:
+  commands:
+    - set -euo pipefail
+    - source /codebuild/output/tmp/.exported_env
+    - echo "🚀 Pushing Docker images to ECR..."
+    - docker push ${FULL_IMAGE}
+    - docker push ${ECR_URI}:latest
 
-env:
-  variables:
-    IMAGE_NAME: "softbank-api"
-    APP_VERSION: "1.0.0"
-  parameter-store:
-    ECR_URI: "/softbank/api/ecr-uri"
-
-phases:
-  pre_build:
-    commands:
-      - set -euo pipefail
-      - echo "🔐 Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$(echo $ECR_URI | cut -d'/' -f1)"
-
-      # ▶️ 공용 ENV 파일 경로(phase 간 공유용)
-      - ENV_FILE="/codebuild/output/tmp/.exported_env"
-      - rm -f "$ENV_FILE" && touch "$ENV_FILE"
-
-      # ▶️ 태그 계산 후 ENV 파일에 저장
-      - IMAGE_TAG=$(TZ='Asia/Seoul' date '+%Y%m%d%H%M%S')
-      - FULL_IMAGE="${ECR_URI}:${APP_VERSION}-${IMAGE_TAG}"
-      - printf 'export IMAGE_TAG=%s\n' "${IMAGE_TAG}"   >> "$ENV_FILE"
-      - printf 'export FULL_IMAGE=%s\n' "${FULL_IMAGE}" >> "$ENV_FILE"
-      - printf 'export ECR_URI=%s\n' "${ECR_URI}"       >> "$ENV_FILE"
-      - echo "📦 Image will be ${FULL_IMAGE}"
-
-  build:
-    commands:
-      - set -euo pipefail
-      - source /codebuild/output/tmp/.exported_env
-      # - ./gradlew bootJar --no-daemon --configuration-cache --build-cache --parallel -x test
-      - echo "🚧 Building Docker image..."
-      - docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-      - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${FULL_IMAGE}
-      - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:latest
-
-  post_build:
-    commands:
-      - set -euo pipefail
-      - source /codebuild/output/tmp/.exported_env
-      - echo "🚀 Pushing Docker images to ECR..."
-      - docker push ${FULL_IMAGE}
-      - docker push ${ECR_URI}:latest
-
-      - echo "📝 Creating deployment configuration..."
-      - |
-        cat > .env.deploy << EOF
-        FULL_IMAGE=${FULL_IMAGE}
-        ECR_URI=${ECR_URI}
-        AWS_REGION=${AWS_DEFAULT_REGION}
-        DYNAMODB_TABLE_NAME=chatapp-dev-messages
-        REDIS_HOST=chatapp-dev-redis.oi0xeh.ng.0001.apn2.cache.amazonaws.com
-        REDIS_PORT=6379
-        EOF
-      - cat .env.deploy
+    - echo "📝 Creating deployment configuration..."
+    - |
+      cat > .env.deploy << EOF
+      FULL_IMAGE=${FULL_IMAGE}
+      ECR_URI=${ECR_URI}
+      AWS_REGION=${AWS_DEFAULT_REGION}
+      EOF
+    
+    # 애플리케이션용 환경변수 파일 분리
+    - |
+      cat > .env.app << EOF
+      DYNAMODB_TABLE_NAME=chatapp-dev-messages
+      REDIS_HOST=chatapp-dev-redis.oi0xeh.ng.0001.apn2.cache.amazonaws.com
+      REDIS_PORT=6379
+      AWS_REGION=${AWS_DEFAULT_REGION}
+      SPRING_DATA_REDIS_HOST=chatapp-dev-redis.oi0xeh.ng.0001.apn2.cache.amazonaws.com
+      SPRING_DATA_REDIS_PORT=6379
+      EOF
+    - cat .env.deploy
+    - cat .env.app
 
 artifacts:
   files:
     - appspec.yml
     - scripts/**/*
     - .env.deploy
-
-cache:
-  paths:
-    - '/root/.gradle/caches/**/*'
-    - '/root/.gradle/wrapper/**/*'
+    - .env.app  # 추가

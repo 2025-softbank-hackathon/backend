@@ -30,9 +30,16 @@ echo "🚀 Starting container..."
 docker run -d \
   --name chatapp-container \
   -p 3000:3000 \
-  --env-file .env.deploy \
+  --env-file .env.app \
   --restart unless-stopped \
   ${FULL_IMAGE}
 
-sleep 5
+echo "🔍 Checking container logs..."
+sleep 3
+docker logs chatapp-container
+
+echo "📋 Environment variables in container:"
+docker exec chatapp-container env | grep -E "REDIS|DYNAMO" || echo "⚠️ Redis/Dynamo env vars not found!"
+
+sleep 2
 docker ps | grep chatapp-container && echo "✅ Container running"

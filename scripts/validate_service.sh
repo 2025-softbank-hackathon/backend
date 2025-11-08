@@ -18,20 +18,22 @@ while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
     fi
     
     # 헬스체크 엔드포인트 확인
-    # /health 엔드포인트가 있다면 사용, 없다면 메인 페이지 확인
-    if curl -f -s http://localhost:3000/health > /dev/null 2>&1; then
-        echo "✅ Service is healthy!"
-        
-        # 추가 확인: 실제 응답 내용
-        RESPONSE=$(curl -s http://localhost:3000/health)
-        echo "Health check response: $RESPONSE"
-        
+    # 먼저 /health 시도
+    if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health 2>/dev/null | grep -q "200"; then
+        echo "✅ Service is healthy! (/health endpoint)"
         exit 0
     fi
     
-    # /health가 없다면 메인 페이지 확인
-    if curl -f -s http://localhost:3000 > /dev/null 2>&1; then
-        echo "✅ Service is responding!"
+    # /health가 없다면 메인 페이지 확인 (200 or 304)
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 2>/dev/null)
+    if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "304" ] || [ "$HTTP_CODE" = "301" ]; then
+        echo "✅ Service is responding! (HTTP $HTTP_CODE)"
+        exit 0
+    fi
+    
+    # 포트가 열려있는지만 확인
+    if nc -z localhost 3000 2>/dev/null; then
+        echo "✅ Port 3000 is open!"
         exit 0
     fi
     

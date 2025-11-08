@@ -7,18 +7,6 @@ echo "🔧 Preparing for installation..."
 sudo mkdir -p /home/ec2-user/app
 cd /home/ec2-user/app
 
-# Docker 설치 확인
-if ! command -v docker &> /dev/null; then
-  echo "🐳 Installing Docker..."
-  sudo yum update -y
-  sudo amazon-linux-extras install docker -y
-  sudo service docker start
-  sudo usermod -aG docker ec2-user
-  echo "✅ Docker installed successfully"
-else
-  echo "✅ Docker already installed"
-fi
-
 # .env.deploy 파일 로드 (있을 경우)
 if [ -f .env.deploy ]; then
     source .env.deploy

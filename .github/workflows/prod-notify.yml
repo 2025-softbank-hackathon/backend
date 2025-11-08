@@ -108,7 +108,7 @@ jobs:
                         "type": "button",
                         "text": {"type": "plain_text", "text": "Go to Dashboard"},
                         "style": "primary",
-                        "url": "d17voj2j3ddvzy.cloudfront.net"
+                        "url": "https://d17voj2j3ddvzy.cloudfront.net"
                     }
                 ]
             }
@@ -123,7 +123,7 @@ jobs:
                 info_section($commit; $msg; $runnum),
                 subtitle_block($subtitle)
               ]
-              + (if $auto then [ dashboard_block() ] else [ actions_block($val_canary; $cta_canary; $val_bg; $cta_bg) ] end)
+              + (if $auto then [ dashboard_block ] else [ actions_block($val_canary; $cta_canary; $val_bg; $cta_bg) ] end)
             )
           }')
 

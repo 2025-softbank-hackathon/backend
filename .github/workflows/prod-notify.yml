@@ -75,7 +75,7 @@ jobs:
           --arg val_bg "$VAL_BG" \
           --arg img "$POKEMON_IMG_URL" \
           --arg text_fallback "prod deploy" \
-          --arg title "🚀 PROD 배포 준비 완료" \
+          --arg title "🚀 PROD 배포 준비 완료 " \
           --arg subtitle "버튼을 눌러 CodePipeline을 시작하세요" \
           --arg cta_canary "Deploy (Skip Test)" \
           --arg cta_bg "Deploy" \

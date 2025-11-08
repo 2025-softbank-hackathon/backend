@@ -99,19 +99,14 @@ jobs:
                style:"danger",
                value:val_bg}
             ]};
-          def dashboard_block():
-            return {
-                "type": "actions",
-                "block_id": "dashboard_panel",
-                "elements": [
-                    {
-                        "type": "button",
-                        "text": {"type": "plain_text", "text": "Go to Dashboard"},
-                        "style": "primary",
-                        "url": "https://d17voj2j3ddvzy.cloudfront.net"
-                    }
-                ]
-            }
+          def dashboard_block:
+          {type:"actions", block_id:"dashboard_panel", elements:[
+            {type:"button",
+              text:{type:"plain_text", text:"Go to Dashboard"},
+              style:"primary",
+              url:"https://d17voj2j3ddvzy.cloudfront.net"}
+          ]};
+
 
           {
             channel: $channel,

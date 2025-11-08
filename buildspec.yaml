@@ -19,6 +19,9 @@ phases:
   build:
     commands:
       - ./gradlew clean bootJar --no-daemon --configuration-cache --build-cache --parallel -x test
+      - ls -al
+      - ls -al build
+      - ls -al build/libs
       - echo "🚧 Building Docker image..."
       - docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
       - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${FULL_IMAGE}

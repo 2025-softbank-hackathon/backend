@@ -12,7 +12,7 @@ phases:
     commands:
       - set -euo pipefail
       - echo "🔐 Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" docker login --username AWS --password-stdin "$(echo $ECR_URI | cut -d'/' -f1)"
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$(echo $ECR_URI | cut -d'/' -f1)"
 
       # ▶️ 태그 계산 + 다음 phase까지 유지 (BASH_ENV)
       - IMAGE_TAG=$(TZ='Asia/Seoul' date '+%Y%m%d%H%M%S')

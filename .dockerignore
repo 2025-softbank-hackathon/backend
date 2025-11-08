@@ -1,7 +1,7 @@
 .git
 .github
 .gradle
-build
+# build
 bin
 *.md
 .gitignore

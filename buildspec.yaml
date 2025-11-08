@@ -30,7 +30,7 @@ phases:
     commands:
       - set -euo pipefail
       - source /codebuild/output/tmp/.exported_env
-      - ./gradlew bootJar --no-daemon --configuration-cache --build-cache --parallel -x test
+      # - ./gradlew bootJar --no-daemon --configuration-cache --build-cache --parallel -x test
       - echo "🚧 Building Docker image..."
       - docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
       - docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${FULL_IMAGE}

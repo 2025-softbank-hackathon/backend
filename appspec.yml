@@ -1,16 +1,33 @@
 version: 0.0
-Resources:
-  - TargetService:
-      Type: AWS::AutoScaling::AutoScalingGroup
-      Properties:
-        Name: chatapp-blue-asg
-        LoadBalancerInfo:
-          TargetGroupPairInfoList:
-            - TargetGroups:
-                - Name: chatapp-blue-tg-ec2
-              ProdTrafficRoute:
-                ListenerArns:
-                  - arn:aws:elasticloadbalancing:ap-northeast-2:137068226866:listener/app/chatapp-alb/xxxx/yyy
-              TestTrafficRoute:
-                ListenerArns:
-                  - arn:aws:elasticloadbalancing:ap-northeast-2:137068226866:listener/app/chatapp-alb/xxxx/zzz
+os: linux
+
+files:
+  - source: /
+    destination: /home/ec2-user/app
+    overwrite: yes
+
+hooks:
+  BeforeInstall:
+    - location: scripts/before_install.sh
+      timeout: 300
+      runas: ec2-user
+
+  ApplicationStop:
+    - location: scripts/stop_application.sh
+      timeout: 300
+      runas: ec2-user
+
+  AfterInstall:
+    - location: scripts/after_install.sh
+      timeout: 300
+      runas: ec2-user
+
+  ApplicationStart:
+    - location: scripts/start_container.sh
+      timeout: 300
+      runas: ec2-user
+
+  ValidateService:
+    - location: scripts/validate_service.sh
+      timeout: 300
+      runas: ec2-user

@@ -1,16 +1,12 @@
 #!/bin/bash
 set -e
 
-echo "🛑 Stopping application..."
+echo "🛑 Stopping old application..."
 
-# 실행 중인 컨테이너 중지 및 삭제
 if docker ps -a | grep -q chatapp-container; then
-    echo "Stopping existing container..."
-    docker stop chatapp-container || true
-    docker rm chatapp-container || true
-    echo "✅ Container stopped and removed"
+  docker stop chatapp-container || true
+  docker rm chatapp-container || true
+  echo "✅ Container stopped and removed"
 else
-    echo "ℹ️ No container to stop"
+  echo "ℹ️ No container found"
 fi
-
-echo "✅ Application stopped successfully"

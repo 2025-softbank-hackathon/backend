@@ -56,14 +56,14 @@ jobs:
             --arg run_id "$RUN_ID" \
             --arg sha "$COMMIT" \
             --arg env "prod" \
-            '{repo:$repo,run_id:$run_id,sha:$sha,env:$env,strategy:$strategy}')
+            '{repo:$repo,run_id:$run_id,sha:$sha,env:$env}')
 
           VAL_BG=$(jq -cn \
             --arg repo "$REPO" \
             --arg run_id "$RUN_ID" \
             --arg sha "$COMMIT" \
             --arg env "prod" \
-            '{repo:$repo,run_id:$run_id,sha:$sha,env:$env,strategy:$strategy}')
+            '{repo:$repo,run_id:$run_id,sha:$sha,env:$env}')
 
           # Slack blocks 조립
           BODY=$(jq -cn \

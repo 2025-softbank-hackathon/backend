@@ -56,7 +56,6 @@ jobs:
             --arg run_id "$RUN_ID" \
             --arg sha "$COMMIT" \
             --arg env "prod" \
-            --arg strategy "canary" \
             '{repo:$repo,run_id:$run_id,sha:$sha,env:$env,strategy:$strategy}')
 
           VAL_BG=$(jq -cn \
@@ -64,7 +63,6 @@ jobs:
             --arg run_id "$RUN_ID" \
             --arg sha "$COMMIT" \
             --arg env "prod" \
-            --arg strategy "bluegreen" \
             '{repo:$repo,run_id:$run_id,sha:$sha,env:$env,strategy:$strategy}')
 
           # Slack blocks 조립
@@ -79,8 +77,8 @@ jobs:
           --arg text_fallback "prod deploy" \
           --arg title "🚀 PROD 배포 준비 완료" \
           --arg subtitle "버튼을 눌러 CodePipeline을 시작하세요" \
-          --arg cta_canary "Canary 10%" \
-          --arg cta_bg "Blue/Green 100%" \
+          --arg cta_canary "Deploy (Skip Test)" \
+          --arg cta_bg "Deploy" \
           --argjson auto "$AUTO" \
           '
           def header_block(t): {type:"header", text:{type:"plain_text", text:t, emoji:true}};

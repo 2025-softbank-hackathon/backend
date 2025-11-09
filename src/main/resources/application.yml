@@ -14,7 +14,7 @@ app:
     app-destination: /app
   redis:
     channel: chat
-    rate-limit-per-minute: 10
+    rate-limit-per-minute: 100
   dynamodb:
     table-name: ${DYNAMODB_TABLE_NAME:chatapp-dev-messages}
     region: ${AWS_REGION:ap-northeast-2}

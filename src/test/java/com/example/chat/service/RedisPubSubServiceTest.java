@@ -21,7 +21,7 @@ class RedisPubSubServiceTest {
         RedisTemplate<String, Object> redisTemplate = mock(RedisTemplate.class, RETURNS_DEEP_STUBS);
         when(redisTemplate.opsForValue().increment("limit:Guest-1234")).thenReturn(1L);
 
-        RedisPubSubService service = new RedisPubSubService(redisTemplate, new ChannelTopic("chat"), 10);
+        RedisPubSubService service = new RedisPubSubService(redisTemplate, new ChannelTopic("chat"));
 
         boolean allowed = service.checkLimit("Guest-1234");
 

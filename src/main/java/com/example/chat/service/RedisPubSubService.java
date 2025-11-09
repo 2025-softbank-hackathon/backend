@@ -17,11 +17,10 @@ public class RedisPubSubService {
 
     public RedisPubSubService(
             RedisTemplate<String, Object> redisTemplate,
-            ChannelTopic topic,
-            @Value("${app.redis.rate-limit-per-minute}") int limitPerMinute) {
+            ChannelTopic topic) {
         this.redisTemplate = redisTemplate;
         this.topic = topic;
-        this.limitPerMinute = limitPerMinute;
+        this.limitPerMinute = 100;
     }
 
     public boolean checkLimit(String nickname) {

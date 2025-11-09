@@ -27,9 +27,9 @@ public class ChatStompController {
 
     @MessageMapping("chatroom.send")
     public void handleMessage(@Payload @Valid MessageDto dto) {
-        if (!redisPubSubService.checkLimit(dto.nickname())) {
-            throw new IllegalStateException("Too many messages");
-        }
+//        if (!redisPubSubService.checkLimit(dto.nickname())) {
+//            throw new IllegalStateException("Too many messages");
+//        }
 
         ChatMessage chatMessage = new ChatMessage(dto.nickname(), dto.message(), ttlSeconds);
         messageRepository.save(chatMessage);

@@ -4,7 +4,7 @@ server:
 spring:
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
+      host: chatapp-dev-redis.oi0xeh.ng.0001.apn2.cache.amazonaws.com
       port: ${REDIS_PORT:6379}
 
 app:
@@ -14,7 +14,7 @@ app:
     app-destination: /app
   redis:
     channel: chat
-    rate-limit-per-minute: 10
+    rate-limit-per-minute: 100
   dynamodb:
     table-name: ${DYNAMODB_TABLE_NAME:chatapp-dev-messages}
     region: ${AWS_REGION:ap-northeast-2}
